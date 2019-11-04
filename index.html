@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Predict Production Rate</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    />
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+      integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"
+      integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js"
+      integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      .main-container {
+        background: rgb(174, 174, 174);
+        background: radial-gradient(
+          circle,
+          rgba(174, 174, 174, 0) 0%,
+          rgba(215, 215, 215, 0.4234068627450981) 100%
+        );
+        height: 575px;
+        border: 2px solid #aeaeae;
+        border-radius: 10px;
+        padding: 10px;
+      }
+      #output{
+        margin-left: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="jumbotron text-center">
+      <h1>Predicting The Foundation Excavation Production Rate</h1>
+      <h5>Done By: Wahib Saif</h5>
+      <p>
+        <br />
+        This Template calculate the Foundation Excavation Production Rate
+        depending on the following factors. PLEASE: Enter the values for the
+        following factors in order to calculate the Production Rate in (𝐦𝟑 /𝐡𝐫).
+      </p>
+    </div>
+
+    <div class="container main-container">
+      <div class="input-group mb-3">
+        <input type="number" class="form-control" id='depth' placeholder="Depth" />
+      </div>
+      <div class="input-group mb-3">
+        <input type="number" class="form-control" id='area' placeholder="Area" />
+      </div>
+      <div class="form-group">
+        <select class="form-control" id="soil-type">
+          <option value="1">Soft Soil</option>
+          <option value="2">Moderate Soil</option>
+          <option value="3">Hard(Rock) Soil</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <select class="form-control" id="exac-method">
+          <option value="1">Labor Work</option>
+          <option value="2">Machine Work</option>
+        </select>
+      </div>
+      <div class="input-group mb-3">
+        <input type="number" class="form-control" id='bucket-volume' placeholder="Bucket Volume" value="0.025" readonly />
+      </div>
+      <div class="input-group mb-3">
+        <input type="number" class="form-control" id="bulking-factor" placeholder="Bulking Factor (%)" />
+      </div>
+      <div class="input-group mb-3">
+        <input type="number" class="form-control" id="crew-size" placeholder="Crew Size" />
+      </div>
+      <div class="input-group mb-3">
+        <input type="number" class="form-control" id="temprature" placeholder="Temperature (C)" />
+      </div>
+      <div class="input-group mb-3">
+        <input type="number" class="form-control" id="haul-distance" placeholder="Distance to haul material for disposal (m)" />
+      </div>
+      <button type="button" class="btn btn-secondary" id='calculate'>Predict Rate</button>
+      <span id="output">5454</span>
+    <script>
+
+      soil = $('#soil-type').find(':selected').text()
+
+      //this is x3
+      method = $('#exac-method')
+      vol = $('#bucket-volume')
+      crew = $('#crew-size')
+      method.change(function(){
+        selectedMethod = method.find(':selected').text()
+        if (selectedMethod=='Labor Work'){
+          vol.val(0.025)
+          vol.attr('readonly',true)
+          crew.attr('readonly',false)
+          crew.val('')
+        }
+        else if (selectedMethod=='Machine Work'){
+          vol.attr('readonly',false)
+          vol.val('')
+          crew.attr('readonly',true)
+          crew.val(2)
+        }
+      })
+
+      method.change(function(){
+        selectedMethod = method.find(':selected').text()
+        if (selectedMethod=='Labor Work'){
+          vol.val(0.025)
+          vol.attr('readonly',true)
+        }
+        else{
+          vol.attr('readonly',false)
+          vol.val('')
+        }
+      })
+      
+      $("#calculate").click(function(){
+        depth = $('#depth')
+        area = $('#area')
+        soilType = $('#soil-type')
+        exacMethod = $('#exac-method')
+        bucketVolume = $('#bucket-volume')
+        bulkingFactor = $('#bulking-factor')
+        crewSize = $('#crew-size')
+        temprature = $('#temprature')
+        hDistance = $('#haul-distance')
+
+        depthVal = depth.val()
+        areaVal = area.val()
+        soilTypeVal = soilType.val()
+        exacMethodVal = exacMethod.val()
+        bucketVolumeVal = bucketVolume.val()
+        bulkingFactorVal = bulkingFactor.val()
+        crewSizeVal = crewSize.val()
+        tempratureVal = temprature.val()
+        hDistanceVal = hDistance.val()
+
+        output = calculate(depthVal, areaVal,soilTypeVal, exacMethodVal, bucketVolumeVal, bulkingFactorVal, crewSizeVal, tempratureVal, hDistanceVal)
+        // alert(output)
+        $('#output').text(output)
+      })
+
+      function calculate(x1, x2, x3,x4,x5,x6,x7,x8,x9){
+        // X1 = 1.4;
+        // X2 = 54;
+        // X3 = 3;
+        // X4 = 1;
+        // X5 = 0.025;
+        // X6 = 48;
+        // X7 = 8;
+        // X8 = 39;
+        // X9 = 20;
+        X1=x1
+        X2=x2
+        X3=x3
+        X4=x4
+        X5=x5
+        X6=x6
+        X7=x7
+        X8=x8
+        X9=x9
+        N842 =
+          -19.3284 +
+          X7 * 3.03224 -
+          X7 * Math.pow(X8, 1 / 3) * 1.28788 +
+          Math.pow(X8, 1 / 3) * 9.66181;
+        N819 = -9.37355 + X1 * 5.45016 - X1 * X2 * 0.0209016 + X2 * 0.0978904;
+        N708 = 1.67165 + N819 * N842 * 0.0882901;
+        N884 = 10.4537 - X3 * 3.26384 + X3 * X9 * 0.00414493;
+        N878 =
+          12.7677 -
+          Math.pow(X6, 1 / 3) * 5.12341 +
+          Math.pow(X6, 1 / 3) * Math.pow(X9, 1 / 3) * 0.48912;
+        N853 = -4.19391 + X1 * 7.89317 - X1 * X3 * 0.946859;
+        N830 = 24.0201 - X7 * 1.20166 - Math.pow(X3, 1 / 3) * 9.22009;
+        N823 =
+          21.0253 -
+          Math.pow(X7, 1 / 3) * 10.3182 +
+          Math.pow(X9, 1 / 3) * 0.321675;
+        N668 = 0.239849 + X5 * Math.pow(X8, 1 / 3) * 8.85348;
+        N790 = -1.17305 + X2 * 0.173253 - X2 * Math.pow(X6, 1 / 3) * 0.0321964;
+        N773 =
+          -29.3142 +
+          Math.pow(X4, 1 / 3) * 36.9511 -
+          Math.pow(X6, 1 / 3) * 1.96975;
+        N690 =
+          -8.93922 +
+          X3 * 1.39844 -
+          X3 * Math.pow(X5, 1 / 3) * 4.94589 +
+          Math.pow(X5, 1 / 3) * 34.1925;
+        N675 = -2.83338 + X5 * 26.5474 + Math.pow(X2, 1 / 3) * 0.803776;
+        N854 = 10.4966 - X7 * 1.01973 + X9 * 0.00287494;
+        N658 =
+          4.44259 +
+          X5 * 33.5073 +
+          X5 * Math.pow(X9, 1 / 3) * 0.593562 -
+          Math.pow(X9, 1 / 3) * 0.924218;
+        N582 = 0.00251768 + X3 * 0.0936906 - X3 * X5 * 6.04885 + X5 * 41.5257;
+        N817 = -2.74366 + Math.pow(X2, 1 / 3) * Math.pow(X9, 1 / 3) * 0.300081;
+        N775 = -33.1046 - X6 * 0.0701767 + Math.pow(X4, 1 / 3) * 36.8974;
+        N892 = 16.5088 - Math.pow(X6, 1 / 3) * 3.00807;
+        N670 =
+          67.5659 - Math.pow(X4, 1 / 3) * 88.479 + Math.pow(X5, 1 / 3) * 76.2456;
+        N880 = -1.26648 - X6 * 0.063255 + Math.pow(X9, 1 / 3) * 1.52714;
+        N890 = 6.72956 - X3 * 3.43146 + Math.pow(X6, 1 / 3) * 2.39808;
+        N808 = 3.03114 + X8 * 0.620708 - X8 * Math.pow(X7, 1 / 3) * 0.326441;
+        N850 =
+          -45.0996 +
+          Math.pow(X1, 1 / 3) * 50.6898 -
+          Math.pow(X1, 1 / 3) * Math.pow(X3, 1 / 3) * 19.1406 +
+          Math.pow(X3, 1 / 3) * 15.5557;
+        N845 =
+          7.26709 +
+          X9 * 0.152951 -
+          X9 * Math.pow(X9, 1 / 3) * 0.0117498 -
+          Math.pow(X9, 1 / 3) * 3.19704;
+        N889 = 19.3042 - Math.pow(X3, 1 / 3) * 9.77661;
+        N671 =
+          7.77789 -
+          X4 * 25.8443 +
+          X4 * Math.pow(X5, 1 / 3) * 9.73569 +
+          Math.pow(X5, 1 / 3) * 56.7742;
+        N877 = -0.520177 - X3 * 1.28041 + Math.pow(X9, 1 / 3) * 1.50221;
+        N664 = 0.779588 + X5 * Math.pow(X5, 1 / 3) * 37.96;
+        N692 =
+          -6.00662 +
+          Math.pow(X5, 1 / 3) * 37.3618 -
+          Math.pow(X5, 1 / 3) * Math.pow(X5, 1 / 3) * 4.27938;
+        N687 =
+          -0.257844 -
+          Math.pow(X2, 1 / 3) * 0.918599 +
+          Math.pow(X2, 1 / 3) * Math.pow(X5, 1 / 3) * 4.37249;
+        N848 = -11.7252 + X9 * 0.00493473 + Math.pow(X2, 1 / 3) * 3.59796;
+        N847 = 2.00031 + X7 * 0.202008 - X7 * X8 * 0.0392356 + X8 * 0.291779;
+        N839 =
+          44.9367 +
+          X2 * 1.17582 -
+          X2 * Math.pow(X2, 1 / 3) * 0.117197 -
+          Math.pow(X2, 1 / 3) * 21.9916;
+        N816 =
+          25.5109 -
+          X6 * Math.pow(X7, 1 / 3) * 0.0538612 -
+          Math.pow(X7, 1 / 3) * 10.0299;
+        N663 = 1.31541 + X5 * 31.5908 + X5 * X9 * 0.0144277 - X9 * 0.00870555;
+        N872 = -1.22209 + N878 * 1.54581 - N878 * N884 * 0.0422132;
+        N447 = 0.0119105 - X3 * N670 * 0.199092 + N670 * 1.39444;
+        N787 = -1.66264 + N845 * 0.615558 + N853 * 0.616869;
+        N477 = 1.30607 + N670 * N830 * 0.0975976 - N830 * 0.130463;
+        N592 =
+          1.19453 + N773 * 0.227447 + N773 * N790 * 0.0857656 - N790 * 0.17346;
+        N412 = 1.03028 + N582 * 0.260884 + N582 * N658 * 0.0524441;
+        N464 = 0.0220137 - Math.pow(X3, 1 / 3) * N670 * 0.884731 + N670 * 2.08359;
+        N484 = 1.18474 + N670 * N892 * 0.138748 - N892 * 0.16736;
+        N678 = -2.82832 + N808 * 0.684869 + N839 * 0.710514;
+        N465 = 0.0220137 + N671 * 0.336658 + N671 * N889 * 0.0904946;
+        N735 = -2.60441 + N847 * 0.639768 + N848 * 0.724313;
+        N529 = 2.02551 - N687 * 0.647597 + N687 * N692 * 0.124052;
+        N657 = 1.60438 + N816 * N839 * 0.0919986;
+        N432 = 0.00367471 - X3 * N663 * 0.217622 + N663 * 1.43676;
+        N312 = -0.725659 + N484 * 1.76203 - N484 * N872 * 0.0701244;
+        N253 = -0.332604 - X9 * N447 * 0.000372131 + N447 * 1.28231;
+        N271 =
+          -3.77088 + N823 * 0.271259 - N823 * N477 * 0.278109 + N477 * 4.06787;
+        N455 = 1.39422 - N675 * 0.210551 + N675 * N690 * 0.0915642;
+        N345 = -0.356491 - N817 * N412 * 0.0199654 + N412 * 1.25301;
+        N185 =
+          -0.502943 - Math.pow(X9, 1 / 3) * N464 * 0.0836932 + N464 * 1.76016;
+        N301 =
+          -0.328272 - N880 * 0.0548128 - N880 * N484 * 0.043439 + N484 * 1.51198;
+        N371 = 0.547459 + N432 * 0.669196 + N432 * N678 * 0.0225222;
+        N306 =
+          -0.139902 - N877 * 0.0844045 - N877 * N465 * 0.0356993 + N465 * 1.44325;
+        N445 =
+          -0.82148 + N529 * 1.6772 - N529 * N735 * 0.0407807 - N735 * 0.11405;
+        N342 = 0.517166 + N432 * 0.733859 + N432 * N657 * 0.0170463;
+        N214 = -0.13776 - N787 * N253 * 0.00958586 + N253 * 1.11749;
+        N140 =
+          -0.543469 - N668 * 0.134271 - N668 * N271 * 0.0241293 + N271 * 1.48642;
+        N289 = -1.18037 - N854 * N455 * 0.123331 + N455 * 2.37858;
+        N146 =
+          -0.107318 + N185 * 1.51994 - N185 * N345 * 0.00336789 - N345 * 0.464415;
+        N201 = -1.804 + N890 * 0.272056 + N301 * 0.980133;
+        N115 = -0.796204 - X5 * 9.25646 - X5 * N306 * 1.1506 + N306 * 1.8541;
+        N133 =
+          -0.44252 - N664 * 0.342817 - N664 * N306 * 0.0233634 + N306 * 1.67516;
+        N125 =
+          -0.029454 -
+          N708 * 0.0597133 -
+          N708 * N146 * 0.00458243 +
+          N146 * 1.11464;
+        N94 = -0.0651743 + N592 * 0.105143 + N140 * 0.903968;
+        N106 = 0.33726 + N775 * N146 * 0.0246841 + N146 * 0.692111;
+        N68 = -0.014939 + N115 * 0.652634 + N201 * 0.349455;
+        N75 = -0.0402998 + N445 * 0.148876 + N133 * 0.856757;
+        N58 = -0.0275605 + N312 * 0.262475 + N125 * 0.741378;
+        N60 =
+          0.181144 - N289 * 0.606394 + N289 * N94 * 0.00360097 + N94 * 1.53763;
+        N54 = 0.0282625 - N371 * 0.282783 + N68 * 1.27883;
+        N48 = 0.0290388 - N342 * 0.301326 + N75 * 1.29727;
+        N21 = 0.0176766 - N214 * 0.700688 + N58 * 1.69822;
+        N12 = -0.00385892 + N60 * 0.2962 + N21 * 0.704339;
+        N9 = 0.00456687 - N106 * 0.305905 + N12 * 1.30527;
+        N6 = -0.00192059 + N54 * 0.186497 + N9 * 0.813772;
+        N5 = 0.948889 - Math.pow(X8, 1 / 3) * 0.290054 + N6 * 1.00129;
+        N4 = 0.0552859 - N850 * 0.0157201 + N5 * 1.00799;
+        N3 = -0.112206 + X2 * 0.00135955 - X2 * N4 * 0.000110556 + N4 * 1.01108;
+        N2 = -0.0113704 - N845 * N3 * 0.00133043 + N3 * 1.01437;
+
+        PR = -0.00130415 + N48 * 0.106778 + N2 * 0.893405;
+        return PR
+      }
+     
+    </script>
+  </body>
+</html>
